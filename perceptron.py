@@ -12,27 +12,29 @@ def readData(testData, trainData):
     y_test = test_data.iloc[:, 4]
     return (x_train,y_train,x_test,y_test)
 
-# Sigmoid function
-def sigmoid(z):
-    s = 1 / (1 + np.exp(-z))
-    return s
+def label_num(y):
+    return len(y.unique())
 
+
+def linearly_separable(x,w,b):
+    z=np.dot(w.T, x) + b
+    if z<0 :
+        return -1
+    if z>=0 :
+       return 1
 
 # initialize_weights randomly
 def initialize_weights(dim):
-    W = np.random.normal((dim, 1))
+    w = np.zeros(dim)
     b = 0
-    return W, b
-
-    assert (W.shape == (dim, 1))
-    assert (isinstance(b, float) or isinstance(b, int))
+    return w, b
 
 
 # Propagation Function
-def propagate_func(W, b, X, Y):
+def propagate_func(w, b, x, Y):
     # Forward Prop
-    m = X.shape[1]
-    A = sigmoid(np.dot(W.T, X) + b)
+    m = x.shape[1]
+    A = linearly_separable(x,w,b)
     cost = (- 1 / m) * np.sum(Y * np.log(A) + (1 - Y) * (np.log(1 - A)))
     # Forward Prop
 
@@ -121,4 +123,9 @@ def model(X_train, Y_train, X_test, Y_test, num_iterations, learning_rate, print
 
 trainPath='data/train.data'
 testPath='data/test.data'
+x_train,y_train,x_test,y_test=readData(trainPath,testPath)
 
+w,b=initialize_weights(4)
+
+#optimize(w,b,x_train,y_train,0.1)
+print(initialize_weights(4))
