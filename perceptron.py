@@ -29,56 +29,20 @@ def initialize_weights(dim):
     b = 0
     return w, b
 
+def perceptron_model(x,w,b,y,r):
+    for i in range(100):
+        output=linearly_separable(x,w,b)
+        error=err(y,output)
+        w=update(error,x,w,r)
 
-# Propagation Function
-def propagate_func(w, b, x, Y):
-    # Forward Prop
-    m = x.shape[1]
-    A = linearly_separable(x,w,b)
-    cost = (- 1 / m) * np.sum(Y * np.log(A) + (1 - Y) * (np.log(1 - A)))
-    # Forward Prop
+    return 0
 
-    # Backward Prop
-    dW = (1 / m) * np.dot(X, (A - Y).T)
-    db = (1 / m) * np.sum(A - Y)
-    # Backward Prop
+def err(label,output):
+    return label-output
 
-    assert (dW.shape == W.shape)
-    assert (db.dtype == float)
-    cost = np.squeeze(cost)
-    assert (cost.shape == ())
-
-    grad_dict = {"dW": dW, "db": db}
-    return grad_dict, cost
-
-
-# Optimization using gradient descent
-def optimize(W, b, X, Y, num_iterations, learning_rate, print_cost=False):
-    costs = []
-
-    for i in range(num_iterations):
-
-        grad_dict, cost = propagate_func(W, b, X, Y)
-
-        dW = grad_dict["dW"]
-        db = grad_dict["db"]
-
-        # Gradient Descent
-        W = W - learning_rate * dW
-        b = b - learning_rate * db
-        # Gradient Descent
-
-        if i % 1000 == 0:
-            costs.append(cost)
-
-        if print_cost and i % 1000 == 0:
-            print("Cost after iteration %i: %f" % (i, cost))
-
-    param_dict = {"W": W, "b": b}
-    grad_dict = {"dW": dW, "db": db}
-
-    return param_dict, grad_dict, costs
-
+def update(err,x,w,r):
+    w=w+err*x*r
+    return w
 
 # Prediction function
 def predict(W, b, X):
@@ -94,32 +58,6 @@ def predict(W, b, X):
     assert (Y_pred.shape == (1, m))
 
     return Y_pred
-
-
-# Perceptron Model
-def model(X_train, Y_train, X_test, Y_test, num_iterations, learning_rate, print_cost=False):
-    W, b = initialize_weights(X_train.shape[0])
-    param_dict, grad_dict, costs = optimize(W, b, X_train, Y_train, num_iterations, learning_rate, print_cost)
-
-    W = param_dict["W"]
-    b = param_dict["b"]
-
-    Y_pred_test = predict(W, b, X_test)
-    Y_pred_train = predict(W, b, X_train)
-
-    print("train accuracy: {} %".format(100 - np.mean(np.abs(Y_pred_train - Y_train)) * 100))
-    print("test accuracy: {} %".format(100 - np.mean(np.abs(Y_pred_test - Y_test)) * 100))
-
-    dict = {"costs": costs,
-            "Y_pred_test": Y_pred_test,
-            "Y_pred_train": Y_pred_train,
-            "W": W,
-            "b": b,
-            "learning_rate": learning_rate,
-            "num_iterations": num_iterations}
-
-    return dict
-
 
 trainPath='data/train.data'
 testPath='data/test.data'
