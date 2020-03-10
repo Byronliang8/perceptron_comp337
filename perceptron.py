@@ -48,7 +48,7 @@ def train_model(x,y,s,num_echo):
 def update(w,err,x,r):
     return w+(r*np.dot(x.T,err)).T
 
-def err(label,output):
+def err(label,output):#xxx
     return label-output
 
 def getLabel(y,index):
