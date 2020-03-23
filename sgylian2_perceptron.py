@@ -1,13 +1,14 @@
 import numpy as np
 
-def perceptron(trainPath,testPath):
+# the ratio is the
+def perceptron(trainPath,testPath, ratio=0.1, num_echo=100):# we can set the ratio value and looping times
     def readData(testData, trainData):
         test_data = np.loadtxt(testData, dtype=np.str, delimiter=',')
         train_data = np.loadtxt(trainData, dtype=np.str, delimiter=',')
-        x_train = train_data[:, 0:4].astype(np.float)
+        x_train = train_data[:, 0:4].astype(np.float_)
         y_train = train_data[:, 4]
 
-        x_test = test_data[:, 0:4].astype(np.float)
+        x_test = test_data[:, 0:4].astype(np.float_)
         y_test = test_data[:, 4]
         x_train = np.c_[x_train, np.ones(x_train.shape[0])]  # another is for bias; it's always to be one
         x_test = np.c_[x_test, np.ones(x_test.shape[0])]  # another is for bia; sit's always to be one
@@ -43,13 +44,13 @@ def perceptron(trainPath,testPath):
         w = np.zeros((dim, num))
         return w.T
 
-    def perceptron_model(x, w, s=0):
+    def perceptron_model(x, w):
         z = np.dot(w, x.T)
         z[z > 0] = 1
-        z[z <= 0] = 0
+        z[z <= 0] = -1
         return z.T
 
-    def train_model(x, y, s, num_echo):
+    def train_model(x, y, num_echo):
         w = initialize_weights(dim=(x.shape[1]), num=label_num(y) - 1)
 
         for i in range(num_echo):
@@ -57,17 +58,13 @@ def perceptron(trainPath,testPath):
                 input = np.array([x[j,]])
                 output = perceptron_model(input, w)
                 label = getLabel(y, j)
-                w = update(w, err(label, output), label, input, -0.1)
+                w = update(w, label,output, input, ratio)
         return w
 
-    def update(w, err, label, x, r):
-        if err == 0:
-            return w
-        if label == 1:
-            t = 1
-        elif label == 0:
-            t = -1
-        return w - 2 * r * w + err * x
+    def update(w, y,output, x, r):
+        if err(y,output) == 0:
+           return w
+        return w - 2*np.multiply.reduce([r,w]) + y * x
         # w+(r*np.dot(x.T,err)).T
 
     def err(label, output):
@@ -79,7 +76,7 @@ def perceptron(trainPath,testPath):
         if i == 1:
             label = 1
         elif i == 0:
-            label = 0
+            label = -1
 
         return label
 
@@ -111,7 +108,7 @@ def perceptron(trainPath,testPath):
     def runModel(class_trainSet,class_testSet,trainAll,testAll):
         x_train, y_train = getGroupDataSet(class_trainSet, trainAll[0], trainAll[1])
         x_test, y_test =getGroupDataSet(class_testSet,testAll[0],testAll[1])
-        w = train_model(x_train, y_train, 0, 100)
+        w = train_model(x_train, y_train, num_echo)
         out = predicate(w, x_test)
         cMatric=confusion_matrix(out,y_test)
         return w,out,cMatric
@@ -126,19 +123,45 @@ def perceptron(trainPath,testPath):
     train_classOne, train_classTwo, train_classThree = GrouptheData(y_train)
     test_classOne, test_classTwo, test_classThree = GrouptheData(y_test)
 
-    #x_t1,y_t1=getGroupDataSet([train_classOne,train_classTwo],x_train,y_train)
-    #w = train_model(x_t1, y_t1, 0, 100)
-
-    #x_t2 = np.vstack((x_test[test_classTwo,], x_test[test_classOne,]))
-   # y_t2 = np.hstack((y_test[test_classTwo,], y_test[test_classOne,]))
-
     # the (a) group to test; classone and classtwo
     train_classA=[train_classOne,train_classTwo]
     test_classA=[test_classOne,test_classTwo]
     resultA=runModel(class_trainSet=train_classA,class_testSet=test_classA,trainAll=trainAll,testAll=testAll)
-    print(resultA)
+
+    # the (b) group to test; classtwo and class three
+    train_classB = [train_classTwo, train_classThree]
+    test_classB = [test_classTwo, test_classThree]
+    resultB = runModel(class_trainSet=train_classB, class_testSet=test_classB, trainAll=trainAll, testAll=testAll)
+
+    # the (c) group to test; class one and class three
+    train_classC = [train_classOne, train_classThree]
+    test_classC = [test_classOne, test_classThree]
+    resultC = runModel(class_trainSet=train_classC, class_testSet=test_classC, trainAll=trainAll, testAll=testAll)
+
+    return resultA,resultB,resultC
+
+def get_accelerate(cMetrix):
+    tp, fp, fn, tn=cMetrix
+    return (tp+tn)/(tp+fp+fn+tn)
 
 trainPath = 'data/train.data'
 testPath = 'data/test.data'
-perceptron(trainPath=trainPath,testPath=testPath)
+ratio_list=[0,0.01,0.1,1,10,100]
 
+for i in range(len(ratio_list)):
+    resultA, resultB,resultC=perceptron(trainPath=trainPath,testPath=testPath,ratio=ratio_list[i],num_echo=100)
+    if ratio_list[i]==0:
+       print(resultA[0])
+       print(resultB[0])
+       print(resultC[0])
+
+    print("When the regularisation coefficient to be: ", ratio_list[i])
+    print("testing set")
+    print("(a) group accelerate",get_accelerate(resultA[2]))
+    print("(b) group accelerate",get_accelerate(resultB[2]))
+    print("(c) group accelerate",get_accelerate(resultC[2]))
+    resultA, resultB, resultC = perceptron(trainPath=trainPath, testPath=trainPath, ratio=ratio_list[i],num_echo=2000)
+    print("training set")
+    print("(a) group accelerate",get_accelerate(resultA[2]))
+    print("(b) group accelerate",get_accelerate(resultB[2]))
+    print("(c) group accelerate",get_accelerate(resultC[2]))
