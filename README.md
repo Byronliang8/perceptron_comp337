@@ -6,7 +6,6 @@ The binary classification has only one output and the math rule is y=wx+b, and w
 
 The binary classification has two output. The fist one is marked as 01, second one to be 10 and the third one to be 11. Those labels are in binary, which means the every output can print only 0 and 1.
 
-# Approach
 ## Read Data
 The input of the data can only be read by reading the path.
 
